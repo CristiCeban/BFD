@@ -12,12 +12,14 @@ ceux-ci sont très coûteux.
 Nos fonctions bufferisées auront pour nom `bopen`,`bread`,`bwrite`, vous devrez
 compléter leur code dans les fichiers qui vous sont fournis. 
 
-## Mise en place du Devoir
+## Mise en place et rendu du Devoir
 
 Le code à compléter est dans le dépôt https://git-etudiants.lacl.fr/root/l2-2020-sysexp-dm
 
 Vous devrez rendre le devoir grâce au dépôt git qui a été créé explicitement
-pour cela. Pour faire cela, vous allez ajouter une nouvelle source git :
+pour cela. Pour faire cela, une fois que vous avez cloné votre dépôt personnel (celui-ci sera vide par 
+défaut),
+vous allez ajouter une nouvelle source git :
 
 ```
 git remote add upstream https://git-etudiants.lacl.fr/root/l2-2020-sysexp-dm
@@ -27,6 +29,8 @@ git pull upstream master
 Le devoir maison est à rendre pour le **29 mai 23h59**. Seuls les 
 devoirs qui sont dans le dépôt créé à cet effet seront acceptés,
 aucun retard ne sera accepté.
+
+**Votre code doit compiler pour être noté.**
 
 ## Organisation du code
 
@@ -96,7 +100,7 @@ option est là pour vous aider à debugger.
 ## Fichiers à compléter
 ### `bio.c`
 
-Le fichier `bio.c` contient les principales fonctions que vous devrez écrire
+Le fichier `bio.c` contient les principales fonctions que vous devrez écrire,
 leur fonctionnement est décrit dans `bio.h`. Pour les tester, vous devrez écrire
 les programmes de test décrits dans la section suivante.
 
