@@ -16,27 +16,31 @@
 
 BFD* 
 bopen(const char *path, const char *mode){
-
+	return NULL;
 }
 
 size_t 
 bwrite(const char *buf, size_t size, BFD *bfd){
-
+	return 0;
 }
 
 
 size_t 
 bread(char *buf, size_t size, BFD *bfd){
+	return 0;
 }
 
 int 
 bflush(BFD *bfd){
+	return 0;
 }
 
 int
 beof(BFD *bfd){
+	return 0;
 }
 
 int 
 bclose(BFD *bfd){
+	return 0;
 }
