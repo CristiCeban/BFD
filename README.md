@@ -12,6 +12,7 @@ ceux-ci sont très coûteux.
 Nos fonctions bufferisées auront pour nom `bopen`,`bread`,`bwrite`, vous devrez
 compléter leur code dans les fichiers qui vous sont fournis. 
 
+- TOC
 {:toc}
 ## Mise en place et rendu du Devoir
 
