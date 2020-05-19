@@ -14,9 +14,22 @@
 #define debug_printf(fmt, args...)    /* Don't do anything in release builds */
 #endif
 
+
 BFD* 
 bopen(const char *path, const char *mode){
-	return NULL;
+	BFD *bp = malloc(sizeof(bp));
+	//int fd;
+	if(strcmp("w",mode)==0){
+		printf("w");
+	}
+	else if(strcmp("r",mode)==0){
+		printf("r");
+	}
+	else if(strcmp("a",mode)==0){
+		printf("a");
+	}
+	
+	return bp;
 }
 
 size_t 

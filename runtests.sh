@@ -7,24 +7,25 @@ PURPLE="\033[1;35m"
 
 size=2345677
 
-printf "${RED}Creation d'un fichier aléatoire${NC}\n" 
+printf "${RED}Create random file${NC}\n" 
 dd if=/dev/urandom of=srcfile bs=${size} count=1 
 cp srcfile savefile
 
 for testprog in $(find tests/ -executable -type f) 
 do
 	printf "\n\n${RED}${testprog} :${NC}\n\n"
+	rm -f destfile
 	./$testprog srcfile destfile
 	if cmp -s srcfile savefile
  	then
 		if cmp -s srcfile destfile
 	 	then
-			printf "${GREEN}Réussi${NC}\n"
+			printf "${GREEN}Succes${NC}\n"
 		else
-			printf "${PURPLE}Echec : le fichier copié est différent${NC}\n"
+			printf "${PURPLE}Error : Copied file is different from the original one${NC}\n"
 		fi
 	else
-		echo "Echec : le programme a modifié le fichier qu'il devait copier"
+		echo "Error : the program modified the file it was supposed to copy"
 		rm -f srcfile destfile savefile
 		exit 1
 	fi
