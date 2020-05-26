@@ -2,7 +2,7 @@
 #include "../bio.h"
 
 int main(int argc, char **argv){
-        char buffer[8];
+        char buffer[1024];
 				ssize_t nbread;
 				BFD *bfd_src,*bfd_dest;
 
@@ -14,7 +14,7 @@ int main(int argc, char **argv){
 				bfd_src = bopen(argv[1],"r");
 				bfd_dest = bopen(argv[2],"w");
 
-				while((nbread=bread(buffer,7,bfd_src))>0){
+				while((nbread=bread(buffer,1023,bfd_src))>0){
 					bwrite(buffer,nbread,bfd_dest);
 				}
 				bclose(bfd_dest);
