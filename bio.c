@@ -15,14 +15,14 @@
 #endif
 
 // typedef struct bfd {
-	// int bufsize; // taille du buffer
+	// int bufsize; // size of the buffer
 	// char buffer[BUFSIZE]; // buffer
 	// char mode; // BREAD, BWRITE
-	// int fd; // descripteur de fichier
-	// position dans le buffer
+	// int fd; // file descriptor
+	// position in the buffer
 	// int pos;
 	// int end;
-	// taille et position dans le fichier 
+	// position and size in the buffer 
 	// off_t fsize;
 	// off_t cur;
 // } BFD;
@@ -95,7 +95,12 @@ bopen(const char *path, const char *mode){
 
 size_t 
 bwrite(const char *buf, size_t size, BFD *bfd){
-	//good case
+	//Check if it was open for write.
+	if(bfd->mode!=BWRITE){
+		errno = EBADF;
+		return BERROR;
+	}
+	//Check if size of bfd->buffer is enought for buf
 	if(bfd->bufsize + size < BUFSIZE){
 		for(int i = 0;i<size;i++){
 			bfd->buffer[bfd->pos+i] = buf[i]; 
@@ -103,24 +108,36 @@ bwrite(const char *buf, size_t size, BFD *bfd){
 		bfd->pos += size;
 		bfd->bufsize +=size;
 		bfd->end +=size;
-		//printf("First case\n");
 	}
 	else{
-		//printf("second case\n");
-		//TODO GOOD MAKE CASE WITH ALOCATIONS
+		//Fill the buffer.
+		size_t t_len = BUFSIZE-bfd->bufsize;
+		//Try with memcpy
+		//Copy the buffer
+		for(int i = 0; i <t_len ;i++){
+			bfd->buffer[bfd->pos+i] = buf[i];
+		}
+		//Decrease the size of the buffer
+		size-=t_len;
+		//Move pointer to the new position.
+		buf+=t_len;
+		bfd->bufsize +=t_len;
 		//flush buffer and realoc it
 		bflush(bfd);
 
-		//read to buffer
-		while(size + bfd->bufsize >2048){
+		//If it contains more than buffer size it read to fd directly.
+		//also here bufsize is always 0.
+		while(size + bfd->bufsize >BUFSIZE){
+			//If error or eof.
 			if((write(bfd->fd,buf,BUFSIZE)<0))
-				return -1;
+				return BERROR;
 			size-=BUFSIZE; //-1?
 			buf+=BUFSIZE; //-1?
 		}
 
 		//Copy buffer
 		memcpy(bfd->buffer,buf,size);
+		//Update atributes.
 		bfd->pos+=size;
 		bfd->end+=size;
 		bfd->bufsize+=size;
@@ -131,7 +148,62 @@ bwrite(const char *buf, size_t size, BFD *bfd){
 
 size_t 
 bread(char *buf, size_t size, BFD *bfd){
-	return read(bfd->fd,buf,size);
+	//Check if it was open for write.
+	if(bfd->mode!=BREAD){
+		errno = EBADF;
+		return BERROR;
+	}
+	//If the buffer is empty.
+	if(bfd->bufsize==0){
+		//Try to read BUFSIZE(2048) bytes.
+		size_t nbh_r = read(bfd->fd,bfd->buffer,BUFSIZE);
+		//If reached eof
+		if(nbh_r==0) 
+			return 0;
+		//if was an error
+		else if(nbh_r<0) 
+			return BERROR;
+		bfd->bufsize = nbh_r;
+		bfd->cur+=nbh_r; 
+		bfd->end=bfd->bufsize;
+		bfd->pos = (bfd->bufsize < size) ? bfd->bufsize : size;
+		for(int i = 0;i<bfd->pos;i++){
+			buf[i] = bfd->buffer[i];
+		}
+		//memmove(buf,bfd->buffer,bfd->pos);
+		return bfd->pos;
+	}
+	else if(bfd->end - bfd->pos >= size){
+		for(int i = 0 ;i<size;i++){
+			buf[i] = bfd->buffer[bfd->pos+i];
+		}
+		bfd->pos+=size;
+	}
+	else{
+		size_t smaller = (bfd->end-bfd->pos < size) ? bfd->end-bfd->pos : size;
+		for(int i = 0 ;i<smaller;i++){
+			buf[i] = bfd->buffer[bfd->pos+i];
+		}
+		size_t nbh_r = read(bfd->fd,bfd->buffer,BUFSIZE);
+		//If reached eof
+		if(nbh_r==0) 
+			return 0;
+		//if was an error
+		else if(nbh_r<0) 
+			return BERROR;
+		bfd->bufsize = nbh_r;
+		bfd->cur+=nbh_r;
+		bfd->end=bfd->bufsize;
+		bfd->pos = (size<nbh_r) ? size : nbh_r;
+		for(int i =0;i < bfd->pos;i++){
+			buf[smaller+i] = bfd->buffer[i];
+		}
+		return smaller;
+		
+		//return read(bfd->fd,buf,size);
+	} 
+	//return read(bfd->fd,buf,size);
+	return 0;
 }
 
 int 
@@ -139,11 +211,18 @@ bflush(BFD *bfd){
 	//flash file
 
 	//If it's oppened for write
-	if(bfd->mode==BWRITE){
+	if(bfd->mode==BWRITE && bfd->fd>=0){
+		//If data are in buffer.
 		if(bfd->bufsize>0){
+			//Write the buffer to the file.
 			ssize_t nbh_w = write(bfd->fd,bfd->buffer,bfd->bufsize);
+			//Check if write was ok (>0).
 			if(nbh_w>0){
+				//Free buffer(it can't work and without this memset,but difference of time is not huge)
+				//with memset 1.48%   0.009978s
+				//without 1.43%    0.010558s
 				memset(bfd->buffer,'\0',bfd->bufsize);
+				//Update the atributes of the bfd.
 				bfd->bufsize = 0;
 				bfd->pos = 0;
 				bfd->end = 0;
@@ -179,7 +258,7 @@ beof(BFD *bfd){
 int 
 bclose(BFD *bfd){
 	//Check if file was opened
-	if(bfd->mode!=BREAD && bfd->mode!=BWRITE){
+	if((bfd->mode!=BREAD && bfd->mode!=BWRITE)||(bfd->fd<0)){
 		errno = EBADF;
 		return -1;
 	}
