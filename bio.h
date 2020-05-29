@@ -15,16 +15,16 @@
 #define BWRITE 2
 
 typedef struct bfd {
-				int bufsize; // taille du buffer
-				char buffer[BUFSIZE]; // buffer
-				char mode; // BREAD, BWRITE
-				int fd; // descripteur de fichier
-				// position dans le buffer
-				int pos;
-				int end;
-				// taille et position dans le fichier 
-				off_t fsize;
-				off_t cur;
+	int bufsize; // taille du buffer
+	char buffer[BUFSIZE]; // buffer
+	char mode; // BREAD, BWRITE
+	int fd; // descripteur de fichier
+	// position dans le buffer
+	int pos;
+	int end;
+	// taille et position dans le fichier 
+	off_t fsize;
+	off_t cur;
 } BFD;
 
 
