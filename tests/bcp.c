@@ -14,7 +14,7 @@ int main(int argc, char **argv){
 				bfd_src = bopen(argv[1],"r");
 				bfd_dest = bopen(argv[2],"w");
 
-				while((nbread=bread(buffer,1023,bfd_src))>0){
+				while((nbread=bread(buffer,1022,bfd_src))>0){
 					bwrite(buffer,nbread,bfd_dest);
 				}
 				bclose(bfd_dest);

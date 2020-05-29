@@ -148,62 +148,68 @@ bwrite(const char *buf, size_t size, BFD *bfd){
 
 size_t 
 bread(char *buf, size_t size, BFD *bfd){
-	//Check if it was open for write.
-	if(bfd->mode!=BREAD){
+	//if it's opened for read and file descriptor is OK
+	if(bfd->mode!=BREAD || bfd->fd < 0){
 		errno = EBADF;
 		return BERROR;
 	}
-	//If the buffer is empty.
-	if(bfd->bufsize==0){
-		//Try to read BUFSIZE(2048) bytes.
-		size_t nbh_r = read(bfd->fd,bfd->buffer,BUFSIZE);
-		//If reached eof
-		if(nbh_r==0) 
-			return 0;
-		//if was an error
-		else if(nbh_r<0) 
-			return BERROR;
-		bfd->bufsize = nbh_r;
-		bfd->cur+=nbh_r; 
-		bfd->end=bfd->bufsize;
-		bfd->pos = (bfd->bufsize < size) ? bfd->bufsize : size;
-		for(int i = 0;i<bfd->pos;i++){
-			buf[i] = bfd->buffer[i];
-		}
-		//memmove(buf,bfd->buffer,bfd->pos);
-		return bfd->pos;
+	//Buffer useful size
+	size_t bfs_u = bfd->end-bfd->pos;
+	//number of bytes readen by buf.
+	size_t nbh_r_b =0;
+	for(int i = 0;i<size;i++){
+		buf[i] = '\0';
 	}
-	else if(bfd->end - bfd->pos >= size){
-		for(int i = 0 ;i<size;i++){
-			buf[i] = bfd->buffer[bfd->pos+i];
+	//If it's enought useful bfd->buffer to copy to buf
+	if(bfs_u>=size){
+		for(int i = 0;i<size;i++){
+			buf[i] =
+			 bfd->buffer
+			 [bfd->pos+i];
 		}
 		bfd->pos+=size;
+		nbh_r_b+=size;
 	}
+	//If it's not enought space(maybe empty).
 	else{
-		size_t smaller = (bfd->end-bfd->pos < size) ? bfd->end-bfd->pos : size;
-		for(int i = 0 ;i<smaller;i++){
+		//size_t t_len = bfd->end-bfd->pos;
+		
+		//Copy buffer with what it is in him.
+		for(int i = 0;i<bfs_u;i++){
 			buf[i] = bfd->buffer[bfd->pos+i];
 		}
+		nbh_r_b +=bfs_u;
+		//Decrease the size of the buffer which is needed to be copied.
+		size-=bfs_u;
+		//Move the pointer to the new position
+		buf+=bfs_u;
+		//update pos in buffer
+		bfd->pos+=bfs_u;
+		//Read BUFFER from fd
+		if(size==0)
+			return nbh_r_b;
+		memset(bfd->buffer,'\0',BUFSIZE);
+		bfd->pos=0;
+		bfd->end=0;
+		bfd->bufsize=0;
 		size_t nbh_r = read(bfd->fd,bfd->buffer,BUFSIZE);
-		//If reached eof
-		if(nbh_r==0) 
-			return 0;
-		//if was an error
-		else if(nbh_r<0) 
+		//Error
+		if(nbh_r<0)
 			return BERROR;
-		bfd->bufsize = nbh_r;
-		bfd->cur+=nbh_r;
-		bfd->end=bfd->bufsize;
-		bfd->pos = (size<nbh_r) ? size : nbh_r;
-		for(int i =0;i < bfd->pos;i++){
-			buf[smaller+i] = bfd->buffer[i];
-		}
-		return smaller;
+		else if(nbh_r == 0)
+			return nbh_r_b;
 		
-		//return read(bfd->fd,buf,size);
-	} 
-	//return read(bfd->fd,buf,size);
-	return 0;
+		//Set atributes to default.
+		bfd->cur+=nbh_r;
+		//copy buffer
+		memmove(buf,bfd->buffer,size);
+		nbh_r_b+=size;
+		bfd->pos+=size;
+		bfd->end+=nbh_r;
+		bfd->bufsize+=nbh_r;
+		return nbh_r_b;
+	}
+	return nbh_r_b;
 }
 
 int 
