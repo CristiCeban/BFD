@@ -14,7 +14,7 @@ TESTS:
 smallcopy(using a buffer of 8 bytes and only system function)
 smallbcopy(using a buffer of 8 bytes and my implementation of bfd(FILE))
 bcp(using a buffer of 1024 and my implementation of bfd(FILE))
-
+```
 tests/smallcopy :
 
 Réussi
@@ -26,7 +26,10 @@ Réussi
 ------ ----------- ----------- --------- --------- ----------------
 100.00    2.004921                670226           total
 
-0.00
+tests/smallbcopy :
+
+Réussi
+
  57.99    0.001492           1      1146           write
  42.01    0.001081           0      1179           read
 ------ ----------- ----------- --------- --------- ----------------
@@ -44,3 +47,4 @@ Réussi
  36.87    0.000594           0      1179           read
 ------ ----------- ----------- --------- --------- ----------------
 100.00    0.001611                  2325           total
+```
